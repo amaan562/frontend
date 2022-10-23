@@ -3,21 +3,25 @@ import jsPDF from "jspdf";
 import Button from 'react-bootstrap/Button';
 import axios from 'axios';
 
+import {toast,ToastContainer} from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
 export default function HR(){
+    var url = `http://localhost:8017/policies/${localStorage.username}`;
     useEffect(()=>{
-        var url  = "http://localhost:8017/policies"
-        axios.get(url+`/${localStorage.username}`).then(data => {
-            setCheck(data.data.hr==='true');
+        axios.get(url).then(data => {
+            setCheck(data.data.hrPolicy);
+            setAlreadyAccepted(data.data.hrPolicy);
         })
     },[]);
+    const [alreadyAccepted, setAlreadyAccepted] = useState(false);
     const [check, setCheck] = useState(false);
     const submitForm = ()=>{
-        alert("NDA Agreement signed !!!")
-        var url = `http://localhost:8017/policies/${localStorage.username}`;
+        toast.success("HR Agreement signed !");
         var hr = {
-            hr : true
+            hrPolicy : true
         }
-        axios.put(url,hr);
+        console.log(axios.put(url,hr)+" returned");
     }
     const checkboxHandler = () => {
         setCheck(!check);
@@ -33,8 +37,9 @@ export default function HR(){
             }
         })
     }
-    return(
-        <div>
+    const notAccepted = ()=>{
+        return(
+            <div>
             <div className="content">
                 <h1>HR Agreement</h1>
                 <div className="agreementText">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam mollis vestibulum orci, non bibendum velit ullamcorper quis. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Nunc rutrum ut felis non hendrerit. Pellentesque sed quam sed neque aliquam eleifend. Nulla facilisi. Sed elementum libero et tortor consequat dignissim. Vestibulum at laoreet sem, et ultrices sapien. Vivamus tempus massa a mauris dapibus, quis eleifend dolor fringilla. Etiam non erat non enim rutrum consectetur eget nec enim. Fusce commodo ligula at leo iaculis, a varius erat tincidunt. In faucibus enim vehicula diam maximus, eget pharetra mi dictum. Proin pretium ultricies dolor. Ut ipsum lectus, ultrices in dui sed, venenatis tempus urna.
@@ -49,10 +54,30 @@ In hac habitasse platea dictumst. Aenean condimentum, erat id placerat vehicula,
                 </div>
             </div>
             <div className="buttons">
-            <Button onClick={generatePDF} type="primary"> Download </Button>
+                <Button onClick={generatePDF} type="primary"> Download </Button>
                 <Button onClick={submitForm} disabled={!check} variant={check?"primary":"secondary"}> Save </Button>
+                {/* {check && <Button onClick={submitForm}> Save </Button>}
+                {!check && <Button onClick={submitForm} disabled variant="secondary"> Save </Button>} */}
             </div>
         </div>
+        )
+    }
+    const accepted = () => {
+        return(
+            <div className="acceptedPage">
+                <h1>Policy Already Accepted</h1>
+            </div>
+        )
+    }
 
+    const renderPage = () => {
+        if(alreadyAccepted)   return accepted();
+        else        return notAccepted();
+    }
+    return(
+        <>
+            {   renderPage()    }
+            <ToastContainer />
+        </>
     );
 }
